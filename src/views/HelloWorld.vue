@@ -1,401 +1,165 @@
 <template>
-  <div>
-    <div style="text-align:center;clear:both;position:absolute;top:0;left:260px">
-    <!-- <script src="/gg_bd_ad_720x90.js" type="text/javascript"></script>
-    <script src="/follow.js" type="text/javascript"></script> -->
-    </div>
-    <canvas class="canvas"></canvas>
-    <div class="help">?</div>
-    <div class="ui">
-      <input class="ui-input" type="text" />
-      <span class="ui-return">↵</span>
-    </div>
-    <div class="overlay">
-      <div class="tabs">
-        <div class="tabs-labels"><span class="tabs-label">Commands</span><span class="tabs-label">Info</span><span class="tabs-label">Share</span></div>
-
-        <div class="tabs-panels">
-          <ul class="tabs-panel commands">
-            <li class="commands-item"><span class="commands-item-title">Text</span><span class="commands-item-info" data-demo="Hello :)">Type anything</span><span class="commands-item-action">Demo</span></li>
-            <li class="commands-item"><span class="commands-item-title">Countdown</span><span class="commands-item-info" data-demo="#countdown 10">#countdown<span class="commands-item-mode">number</span></span><span class="commands-item-action">Demo</span></li>
-            <li class="commands-item"><span class="commands-item-title">Time</span><span class="commands-item-info" data-demo="#time">#time</span><span class="commands-item-action">Demo</span></li>
-            <li class="commands-item"><span class="commands-item-title">Rectangle</span><span class="commands-item-info" data-demo="#rectangle 30x15">#rectangle<span class="commands-item-mode">width x height</span></span><span class="commands-item-action">Demo</span></li>
-            <li class="commands-item"><span class="commands-item-title">Circle</span><span class="commands-item-info" data-demo="#circle 25">#circle<span class="commands-item-mode">diameter</span></span><span class="commands-item-action">Demo</span></li>
-
-            <li class="commands-item commands-item--gap"><span class="commands-item-title">Animate</span><span class="commands-item-info" data-demo="The time is|#time|#countdown 3|#icon thumbs-up"><span class="commands-item-mode">command1</span>&nbsp;|<span class="commands-item-mode">command2</span></span><span class="commands-item-action">Demo</span></li>
-          </ul>
-
-          <div class="tabs-panel ui-details">
-            <div class="ui-details-content">
-              <h1>Shape Shifter</h1>
-              <p>
-                An experiment by <a href="http://www.kennethcachia.com" target="_blank">Kenneth Cachia</a>.<br/>
-                <a href="//fortawesome.github.io/Font-Awesome/#icons-new" target="_blank">Font Awesome</a> is being used to render all #icons.
-              </p>
-              <br/>
-              <p>Visit <a href="http://www.kennethcachia.com/shape-shifter/?a=#icon thumbs-up" target="_blank">Shape Shifter</a> to use icons.</p>
-            </div>
-          </div>
-
-          <div class="tabs-panel ui-share">
-            <div class="ui-share-content">
-              <h1>Sharing</h1>
-              <p>Simply add <em>?a=</em> to the current URL to share any static or animated text. Examples:</p>
-              <p>
-                <a href="http://www.kennethcachia.com/shape-shifter?a=Hello" target="_blank">www.kennethcachia.com/shape-shifter?a=Hello</a><br/>
-                <a href="http://www.kennethcachia.com/shape-shifter?a=Hello|#countdown 3" target="_blank">www.kennethcachia.com/shape-shifter?a=Hello|#countdown 3</a>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- <script src="js/index.js"></script> -->
+  <div class="flex-container" id="login" :style="{height: screenHeight+'px'}">
+    <div class="canvaszz" :style="{height: screenHeight+'px'}"></div>
+    <canvas id="canvas" :style="{height: screenHeight+'px'}"></canvas>
   </div>
 </template>
 
 <script>
-import S from '@/utils/canvas.js'
+// import mapState from 'vuex'
 export default {
-  name: 'HelloWorld',
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      screenHeight: window.innerHeight // 屏幕高度
+    }
+  },
+  watch: {
+    'screenHeight': function (val) { // 监听屏幕高度变化
+      var oIframe = document.getElementById('login')
+      oIframe.style.height = Number(val) + 'px' // '120'是页面布局调整，可去除
     }
   },
   mounted () {
-    // S.init()
+    var _this = this
+    window.onresize = function () { // 定义窗口大小变更通知事件
+      _this.screenHeight = document.documentElement.clientHeight // 窗口高度
+    }
+    var canvas = document.getElementById('canvas')
+    var ctx = canvas.getContext('2d')
+    var w = canvas.width = window.innerWidth
+    var h = canvas.height = window.innerHeight
+    var hue = 217
+    var stars = []
+    var count = 0
+    var maxStars = 1300 // 星星数量
+
+    var canvas2 = document.createElement('canvas')
+    var ctx2 = canvas2.getContext('2d')
+    canvas2.width = 100
+    canvas2.height = 100
+    var half = canvas2.width / 2
+    var gradient2 = ctx2.createRadialGradient(half, half, 0, half, half, half)
+    gradient2.addColorStop(0.025, '#CCC')
+    gradient2.addColorStop(0.1, 'hsl(' + hue + ', 61%, 33%)')
+    gradient2.addColorStop(0.25, 'hsl(' + hue + ', 64%, 6%)')
+    gradient2.addColorStop(1, 'transparent')
+
+    ctx2.fillStyle = gradient2
+    ctx2.beginPath()
+    ctx2.arc(half, half, half, 0, Math.PI * 2)
+    ctx2.fill()
+
+    // End cache
+
+    function random (min, max) {
+      if (arguments.length < 2) {
+        max = min
+        min = 0
+      }
+
+      if (min > max) {
+        var hold = max
+        max = min
+        min = hold
+      }
+
+      return Math.floor(Math.random() * (max - min + 1)) + min
+    }
+
+    function maxOrbit (x, y) {
+      var max = Math.max(x, y)
+      var diameter = Math.round(Math.sqrt(max * max + max * max))
+      return diameter / 2
+      // 星星移动范围，值越大范围越小，
+    }
+
+    var Star = function () {
+      this.orbitRadius = random(maxOrbit(w, h))
+      this.radius = random(60, this.orbitRadius) / 8
+      // 星星大小
+      this.orbitX = w / 2
+      this.orbitY = h / 2
+      this.timePassed = random(0, maxStars)
+      this.speed = random(this.orbitRadius) / 50000
+      // 星星移动速度
+      this.alpha = random(2, 10) / 10
+
+      count++
+      stars[count] = this
+    }
+
+    Star.prototype.draw = function () {
+      var x = Math.sin(this.timePassed) * this.orbitRadius + this.orbitX
+      var y = Math.cos(this.timePassed) * this.orbitRadius + this.orbitY
+      var twinkle = random(10)
+
+      if (twinkle === 1 && this.alpha > 0) {
+        this.alpha -= 0.05
+      } else if (twinkle === 2 && this.alpha < 1) {
+        this.alpha += 0.05
+      }
+
+      ctx.globalAlpha = this.alpha
+      ctx.drawImage(canvas2, x - this.radius / 2, y - this.radius / 2, this.radius, this.radius)
+      this.timePassed += this.speed
+    }
+
+    for (var i = 0; i < maxStars; i++) {
+      /* eslint-disable no-new */
+      new Star()
+    }
+
+    function animation () {
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.globalAlpha = 0.5 // 尾巴
+      ctx.fillStyle = 'hsla(' + hue + ', 64%, 6%, 2)'
+      ctx.fillRect(0, 0, w, h)
+
+      ctx.globalCompositeOperation = 'lighter'
+      for (var i = 1, l = stars.length; i < l; i++) {
+        stars[i].draw()
+      };
+
+      window.requestAnimationFrame(animation)
+    }
+
+    animation()
+  },
+  created () {
+    this.$http.get('/api/users').then((response) => {
+      console.log(response)
+    }).catch((error) => {
+      console.log(error)
+    })
+  },
+  methods: {
+    addClass (val) {
+      document.getElementById(val).style.color = 'black'
+      // document.getElementById('register').style.color = 'black'
+    },
+    deleteClass (val) {
+      document.getElementById(val).style.color = ''
+    }
   }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-
-body {
-  font-family: "Avenir", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  background: #79a8ae;
-  color: #666;
-  font-size: 16px;
-  line-height: 1.5em;
-}
-
-h1 {
-  color: #111;
-  margin: 0 0 12px 0;
-  font-size: 24px;
-  line-height: 1.5em;
-}
-
-p {
-  margin: 0 0 10x 0;
-}
-
-a {
-  color: #888;
-  text-decoration: none;
-  border-bottom: 1px solid #ccc;
-}
-
-a:hover {
-  border-bottom-color: #888;
-}
-
-body,
-.overlay {
-  -webkit-perspective: 1000;
-  -webkit-perspective-origin-y: 25%;
-}
-
-.body--ready {
-  /* Ideas
-  background: -webkit-linear-gradient(top, #e2b986 -10%, #241c35 140%);
-  background: -webkit-linear-gradient(top, #c97369 -40%, #241c35 130%);
-  background: -webkit-linear-gradient(top, #fac4c4 -10%, #606386 140%);
-  background: -webkit-linear-gradient(top, #519ab0 0%, #414A6D 110%);
-  background: -webkit-linear-gradient(top, rgb(129, 0, 170) 0%, rgb(43, 4, 114) 110%);
-  background: -webkit-linear-gradient(top, rgb(163, 235, 189) 0%, rgb(16, 93, 145) 110%);
-  background: -webkit-linear-gradient(top, rgb(165, 103, 189) 0%, rgb(75, 233, 214) 120%);
-  */
-
-  background: -webkit-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
-  background: -moz-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
-  background: -o-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
-  background: -ms-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
-  background: linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
-}
-
-.body--ready .overlay {
-  -webkit-transition: -webkit-transform 0.7s cubic-bezier(0.694, 0.0482, 0.335, 1),
-                      opacity 0.7s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  -moz-transition: -moz-transform 0.7s cubic-bezier(0.694, 0.0482, 0.335, 1),
-                      opacity 0.7s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  -ms-transition: -ms-transform 0.7s cubic-bezier(0.694, 0.0482, 0.335, 1),
-                      opacity 0.7s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  -o-transition: -o-transform 0.7s cubic-bezier(0.694, 0.0482, 0.335, 1),
-                      opacity 0.7s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  transition: transform 0.7s cubic-bezier(0.694, 0.0482, 0.335, 1),
-                      opacity 0.7s cubic-bezier(0.694, 0.0482, 0.335, 1);
-}
-
-.ui {
-  position: absolute;
-  left: 50%;
-  bottom: 5%;
-  width: 300px;
-  margin-left: -150px;
-}
-
-.ui-input {
+<style lang="scss" scoped>canvas {
   width: 100%;
-  height: 50px;
-  background: none;
-  font-size: 24px;
-  font-weight: bold;
-  color: #fff;
-  text-align: center;
-  border: none;
-  border-bottom: 2px solid white;
-}
-
-.ui-input:focus {
-  outline: none;
-  border: none;
-  border-bottom: 2px solid white;
-}
-
-.ui-return {
-  display: none;
+  height: auto /*默认全屏显示 可自己设置高度640px*/;
+  display: inline-block;
+  vertical-align: baseline;
   position: absolute;
-  top: 20px;
-  right: 0;
-  padding: 3px 2px 0 2px;
-  font-size: 10px;
-  line-height: 10px;
-  color: #fff;
-  border: 1px solid #fff;
+  z-index: -1;
+  left:0
 }
-
-.ui--enter .ui-return {
-  display: block;
-}
-
-.ui--wide {
-  width: 76%;
-  margin-left: 12%;
-  left: 0;
-}
-
-.ui--wide .ui-return {
-  right: -20px;
-}
-
-.help {
-  position: absolute;
-  top: 40px;
-  right: 40px;
-  width: 25px;
-  height: 25px;
-  text-align: center;
-  font-size: 13px;
-  line-height: 27px;
-  font-weight: bold;
-  cursor: pointer;
-  background: #fff;
-  color: #79a8ae;
-  opacity: .9;
-
-  -webkit-transition: opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  -moz-transition: opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  -ms-transition: opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  -o-transition: opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  transition: opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-}
-
-.help:hover {
-  opacity: 1;
-}
-
-.overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 550px;
-  height: 490px;
-  margin: -260px 0 0 -275px;
-  opacity: 0;
-
-  -webkit-transform: rotateY(90deg);
-  -moz-transform: rotateY(90deg);
-  -ms-transform: rotateY(90deg);
-  -o-transform: rotateY(90deg);
-  transform: rotateY(90deg);
-}
-
-.overlay--visible {
-  opacity: 1;
-
-  -webkit-transform: rotateY(0);
-  -moz-transform: rotateY(0);
-  -ms-transform: rotateY(0);
-  -o-transform: rotateY(0);
-  transform: rotateY(0);
-}
-
-.ui-share,
-.ui-details {
-  opacity: .9;
-  background: #fff;
-  z-index: 2;
-}
-
-.ui-details-content,
-.ui-share-content {
-  padding: 100px 50px;
-}
-
-.commands {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  cursor: pointer;
-}
-
-.commands-item {
-  font-size: 12px;
-  line-height: 22px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  padding: 20px;
-  background: #fff;
-  margin-top: 1px;
-  color: #333;
-  opacity: .9;
-
-  -webkit-transition: -webkit-transform 0.7s cubic-bezier(0.694, 0.0482, 0.335, 1),
-                      opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  -moz-transition: -moz-transform 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1),
-                      opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  -ms-transition: -ms-transform 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1),
-                      opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  -o-transition: -o-transform 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1),
-                      opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  transition: transform 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1),
-                      opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-}
-
-.commands-item--gap {
-  margin-top: 9px;
-}
-
-.commands-item:hover {
-  opacity: 1;
-}
-
-.commands-item:hover .commands-item-action {
-  background: #333;
-}
-
-.commands-item a {
-  display: inline-block;
-}
-
-.commands-item-mode {
-  display: inline-block;
-  margin-left: 3px;
-  font-style: italic;
-  color: #ccc;
-}
-
-.commands-item-title {
-  display: inline-block;
-  width: 150px;
-}
-
-.commands-item-info {
-  display: inline-block;
-  width: 300px;
-  font-size: 14px;
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: normal;
-  color: #aaa;
-}
-
-.commands-item-action {
-  display: inline-block;
-  float: right;
-  margin-top: 3px;
-  text-transform: uppercase;
-  font-size: 10px;
-  line-height: 10px;
-  color: #fff;
-  background: #90c9d1;
-  padding: 5px 10px 4px 10px;
-  border-radius: 3px;
-}
-
-.commands-item:first-child {
-  margin-top: 0;
-}
-
-.twitter-share {
-  position: absolute;
-  top: 4px;
-  right: 20px;
-}
-
-.tabs-labels {
-  margin-bottom: 9px;
-}
-
-.tabs-label {
-  display: inline-block;
-  background: #fff;
-  padding: 10px 20px;
-  font-size: 12px;
-  line-height: 22px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #333;
-  opacity: .5;
-  cursor: pointer;
-  margin-right: 2px;
-
-  -webkit-transition: opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  -moz-transition: opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  -ms-transition: opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  -o-transition: opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-  transition: opacity 0.1s cubic-bezier(0.694, 0.0482, 0.335, 1);
-}
-
-.tabs-label:hover {
-  opacity: .9;
-}
-
-.tabs-label--active {
-  opacity: .9;
-}
-
-.tabs-panel {
-  display: none;
-}
-
-.tabs-panel--active {
-  display: block;
-}
-
-.tab-panel {
-  position: absolute;
-  top: 0;
-  left: 0;
+.canvaszz {
   width: 100%;
+  background: url('../../static/in_top_bj.jpg') no-repeat;
+  position: absolute;
+  z-index: 10;
+  filter: alpha(opacity=40);
+  -moz-opacity: 0.4;
+  -khtml-opacity: 0.4;
+  opacity: 0.4;
 }
-
-.touch .ui-input {
-  display: none;
-}
-
 </style>

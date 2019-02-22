@@ -4,6 +4,11 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 
+import ElementUI from 'element-ui'
+import vueParticleLine from 'vue-particle-line'
+
+Vue.use(ElementUI)
+Vue.use(vueParticleLine)
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */
